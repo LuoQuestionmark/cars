@@ -1,3 +1,5 @@
+from copy import deepcopy
+from typing import Callable, Iterable, Self
 import numpy as np
 
 class Storage:
@@ -28,153 +30,228 @@ class Storage:
 
         # the following integers represent the current level of the moving platform,
         # numbering from 0 to the (height - 1)
-        self.left_pad_level = 0
-        self.right_pad_level = 0
+        self.left_plat_level = 0
+        self.right_plat_level = 0
 
     def __str__(self) -> str:
         return str(self.data)
 
-    def add(self, col_num, value) -> bool:
+    def add(self, col_num, value, copy=False) -> bool|Self:
         if col_num not in range(1, self.width):
             return False
-        if col_num == 0 and self.left_pad_level != 0:
+        if col_num == 0 and self.left_plat_level != 0:
             return False
-        if col_num == self.width - 1 and self.right_pad_level != 0:
-            return 0
+        if col_num == self.width - 1 and self.right_plat_level != 0:
+            return False
         if self.data[0, col_num] != 0:
             return False
 
+        if copy:
+            self = deepcopy(self)
         self.data[-1, col_num] = value
+        if copy:
+            return self
+        else:
+            return True
 
-    def remove(self, col_num) -> bool:
+    def remove(self, col_num, copy=False) -> bool|Self:
         if col_num not in range(self.width):
             return False
-        if self.data[0, col_num] == 0:
+        if self.data[-1, col_num] == 0:
             return False
 
+        if copy:
+            self = deepcopy(self)
         self.data[-1, col_num] = 0
+        if copy:
+            return self
+        else:
+            return True
 
-    def pop(self, level: int) -> bool:
+    def pop(self, level: int, copy=False) -> bool|Self:
         if level not in range(self.height):
             return False
 
-        if level != self.right_pad_level:
+        if level != self.right_plat_level:
             return False
 
         level = (self.height - 1) - level
         if self.data[level, -1] != 0:
             return False
+
+        if copy:
+            self = deepcopy(self)
 
         for i in reversed(range(1, self.width)):
             self.data[level][i] = self.data[level][i - 1]
         self.data[level][0] = 0
 
-    def popleft(self, level: int) -> bool:
+        if copy:
+            return self
+        else:
+            return True
+
+    def popleft(self, level: int, copy=False) -> bool|Self:
         if level not in range(self.height):
             return False
 
-        if level != self.left_pad_level:
+        if level != self.left_plat_level:
             return False
 
         level = (self.height - 1) - level
         if self.data[level, 0] != 0:
             return False
 
+        if copy:
+            self = deepcopy(self)
+
         for i in range(0, self.width - 1):
             self.data[level][i] = self.data[level][i + 1]
         self.data[level][self.width - 1] = 0
 
-    def up(self) -> bool:
-        if self.right_pad_level >= self.height - 1:
+        if copy:
+            return self
+        else:
+            return True
+
+    def up(self, copy=False) -> bool|Self:
+        if self.right_plat_level >= self.height - 1:
             return False
 
-        level = self.height - self.right_pad_level - 1
+        level = self.height - self.right_plat_level - 1
 
         if self.data[level, self.width - 1] != 0:
             self.data[level - 1 , -1] = self.data[level, -1]
             self.data[level, -1] = 0
 
-        self.right_pad_level += 1
+        if copy:
+            self = deepcopy(self)
 
-        return True
+        self.right_plat_level += 1
+
+        if copy:
+            return self
+        else:
+            return True
     
-    def upleft(self) -> bool:
-        if self.left_pad_level >= self.height - 1:
+    def upleft(self, copy=False) -> bool|Self:
+        if self.left_plat_level >= self.height - 1:
             return False
 
-        level = self.height - self.left_pad_level - 1
+        level = self.height - self.left_plat_level - 1
+
+        if copy:
+            self = deepcopy(self)
 
         if self.data[level, 0] != 0:
             self.data[level - 1 , 0] = self.data[level, 0]
             self.data[level, 0] = 0
 
-        self.left_pad_level += 1
+        self.left_plat_level += 1
 
-        return True
+        if copy:
+            return self
+        else:
+            return True
 
-    def down(self) -> bool:
-        if self.right_pad_level <= 0:
+    def down(self, copy=False) -> bool|Self:
+        if self.right_plat_level <= 0:
             return False
 
-        level = self.height - self.right_pad_level - 1
+        level = self.height - self.right_plat_level - 1
+
+        if copy:
+            self = deepcopy(self)
 
         if self.data[level, -1] != 0:
             self.data[level + 1 , -1] = self.data[level, -1]
             self.data[level, -1] = 0
 
-        self.right_pad_level -= 1
+        self.right_plat_level -= 1
 
-        return True
+        if copy:
+            return self
+        else:
+            return True
 
-    def downleft(self) -> bool:
-        if self.left_pad_level <= 0:
+    def downleft(self, copy=False) -> bool|Self:
+        if self.left_plat_level <= 0:
             return False
 
-        level = self.height - self.left_pad_level - 1
+        level = self.height - self.left_plat_level - 1
+
+        if copy:
+            self = deepcopy(self)
 
         if self.data[level, 0] != 0:
             self.data[level + 1 , 0] = self.data[level, 0]
             self.data[level, 0] = 0
 
-        self.left_pad_level -= 1
+        self.left_plat_level -= 1
 
-        return True
+        if copy:
+            return self
+        else:
+            return True
 
+    def available_options(self) -> list[tuple[Callable[..., bool], Iterable]]:
+        ret = list()
+
+        if self.data[self.left_plat_level, 0] != 0:
+            # a car on the left platform
+            pass
+        else:
+            # no car on the left platform
+            pass
+
+        if self.data[self.right_plat_level, -1] != 0:
+            # a car on the right platform
+            pass
+        else:
+            # no car on the right platform
+            pass
+
+        for i in range(self.width):
+            if self.data[-1, i] != 0:
+                ret.append((self.remove, [i, ]))
+
+        return ret
 
 if __name__ == '__main__':
-    storage = Storage(7, 5)
-    print(storage)
-    print("")
+    pass
+    # storage = Storage(7, 5)
+    # print(storage)
+    # print("")
 
-    storage.add(3, value=1)
-    storage.add(4, value=2)
-    storage.add(5, value=3)
-    print(storage)
-    print("")
+    # storage.add(3, value=1)
+    # storage.add(4, value=2)
+    # storage.add(5, value=3)
+    # print(storage)
+    # print("")
 
-    storage.pop(0)
-    print(storage)
-    print("")
+    # storage.pop(0)
+    # print(storage)
+    # print("")
 
-    storage.up()
-    print(storage)
-    print("")
+    # storage.up()
+    # print(storage)
+    # print("")
 
-    storage.down()
-    print(storage)
-    print("")
+    # storage.down()
+    # print(storage)
+    # print("")
 
-    storage.popleft(0)
-    storage.popleft(0)
-    storage.popleft(0)
-    storage.popleft(0)
-    print(storage)
-    print("")
+    # storage.popleft(0)
+    # storage.popleft(0)
+    # storage.popleft(0)
+    # storage.popleft(0)
+    # print(storage)
+    # print("")
 
-    storage.upleft()
-    print(storage)
-    print("")
+    # storage.upleft()
+    # print(storage)
+    # print("")
 
-    storage.downleft()
-    print(storage)
-    print("")
+    # storage.downleft()
+    # print(storage)
+    # print("")

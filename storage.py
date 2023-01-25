@@ -251,7 +251,7 @@ class Storage:
         raise RuntimeError("unexpected condition, potential bugs")
 
     @classmethod
-    def calculate_shortest_path(cls, storage: Self, vehicle_num: int) -> Iterable[list[tuple[Callable[..., bool], Iterable]]]:
+    def calculate_shortest_path(cls, storage: Self, vehicle_num: int) -> Iterable[list[tuple[Callable[..., bool], Iterable]]] | None:
         """
         return the shortest sequence that make the given car on the ground
         """
@@ -309,7 +309,8 @@ if __name__ == '__main__':
     print(storage)
 
     r = Storage.calculate_shortest_path(storage, 7)
-    r = [(i[0].__name__, i[1]) for i in r]
+    if r != None:
+        r = [(i[0].__name__, i[1]) for i in r]
     print(r)
     # storage2 = storage.add(3, value=1, copy=True)
 

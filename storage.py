@@ -119,6 +119,8 @@ class Storage:
     def up(self, copy=False) -> bool|Self:
         if self.right_plat_level >= self.height - 1:
             return False
+        if copy:
+            self = deepcopy(self)
 
         level = self.height - self.right_plat_level - 1
 
@@ -126,8 +128,6 @@ class Storage:
             self.data[level - 1 , -1] = self.data[level, -1]
             self.data[level, -1] = 0
 
-        if copy:
-            self = deepcopy(self)
 
         self.right_plat_level += 1
 
@@ -139,11 +139,11 @@ class Storage:
     def upleft(self, copy=False) -> bool|Self:
         if self.left_plat_level >= self.height - 1:
             return False
+        if copy:
+            self = deepcopy(self)
 
         level = self.height - self.left_plat_level - 1
 
-        if copy:
-            self = deepcopy(self)
 
         if self.data[level, 0] != 0:
             self.data[level - 1 , 0] = self.data[level, 0]
@@ -159,11 +159,11 @@ class Storage:
     def down(self, copy=False) -> bool|Self:
         if self.right_plat_level <= 0:
             return False
+        if copy:
+            self = deepcopy(self)
 
         level = self.height - self.right_plat_level - 1
 
-        if copy:
-            self = deepcopy(self)
 
         if self.data[level, -1] != 0:
             self.data[level + 1 , -1] = self.data[level, -1]
@@ -242,7 +242,7 @@ class Storage:
             # if on the ground
             return 0
 
-        for i in range(1, self.height):
+        for i in range(0, self.height):
             if vehicle_num in self.data[i]:
                 val = list(self.data[i]).index(vehicle_num)
                 val = self.width - np.abs(int(self.width / 2) - val)
@@ -265,7 +265,7 @@ class Storage:
 
         while possibles:
             studying_case, operations = possibles.pop(0)
-            if (studying_case.eval(vehicle_num) == 0):
+            if (studying_case.eval(vehicle_num) <= 0):
                 # if successed, return
                 return operations
 

@@ -36,3 +36,15 @@ data = np.array(
     ]
 )
 ```
+
+## Duplicate new states
+
+The various movements can lead the board to a new state; this is controlled by the `copy=True` argument of these functions.
+
+For example:
+
+```python
+storage2 = storage.add(3, value=1, copy=True)
+```
+
+duplicate the state of `storage`, then apply the action on the copy; the copy is affected to `storage2`.
